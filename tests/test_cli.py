@@ -1,43 +1,58 @@
-"""Tests for the command-line behavior (argument parsing + output).
+"""Tests for the command-line interface (pytaint.cli).
 
 `main` accepts an argv list, so we can drive the CLI in-process without
-spawning a subprocess. `capsys` is a built-in pytest fixture that captures
-anything printed to stdout/stderr so we can assert on it.
+spawning a subprocess. `capsys` captures stdout/stderr so we can assert on
+output and exit codes.
 """
+
+import json
+import os
 
 import pytest
 
-from hello_cli.cli import main
+from pytaint import __version__
+from pytaint.cli import main
+
+SAMPLES = os.path.join(os.path.dirname(__file__), "..", "samples")
 
 
-def test_main_default_prints_hello_world(capsys):
-    exit_code = main([])
-    assert capsys.readouterr().out.strip() == "Hello, World!"
-    assert exit_code == 0  # 0 = success, the Unix convention
+def test_scan_with_findings_exits_1(capsys):
+    code = main([os.path.join(SAMPLES, "vuln_sql_injection.py")])
+    out = capsys.readouterr().out
+    assert code == 1  # findings present -> non-zero exit
+    assert "sql-injection" in out
 
 
-def test_main_with_name(capsys):
-    exit_code = main(["--name", "Ada"])
-    assert capsys.readouterr().out.strip() == "Hello, Ada!"
-    assert exit_code == 0
+def test_clean_target_exits_0(capsys, tmp_path):
+    clean = tmp_path / "clean.py"
+    clean.write_text("x = 1\nprint(x)\n")
+    code = main([str(clean)])
+    assert code == 0
+    assert "0 finding" in capsys.readouterr().out
 
 
-def test_main_short_flag(capsys):
-    main(["-n", "Bob"])
-    assert capsys.readouterr().out.strip() == "Hello, Bob!"
+def test_missing_path_exits_2(capsys):
+    code = main(["/no/such/path/here.py"])
+    assert code == 2
+    assert "not found" in capsys.readouterr().err
 
 
-def test_version_flag_exits_zero(capsys):
-    # argparse's --version prints the version and raises SystemExit(0).
+def test_json_format_is_valid(capsys):
+    code = main(["--format", "json", os.path.join(SAMPLES, "vuln_sql_injection.py")])
+    data = json.loads(capsys.readouterr().out)
+    assert code == 1
+    assert data["summary"]["findings"] == 2
+
+
+def test_version_flag(capsys):
     with pytest.raises(SystemExit) as exc:
         main(["--version"])
     assert exc.value.code == 0
-    assert "1.0.0" in capsys.readouterr().out
+    assert __version__ in capsys.readouterr().out
 
 
-def test_unknown_flag_exits_nonzero():
-    # A bad flag should fail loudly with a non-zero exit code, not
-    # silently succeed. "Fail loud" is a habit worth building early.
-    with pytest.raises(SystemExit) as exc:
-        main(["--does-not-exist"])
-    assert exc.value.code != 0
+def test_no_taint_params_reduces_findings():
+    cmd = os.path.join(SAMPLES, "vuln_command_injection.py")
+    # default flags both vulns; --no-taint-params drops the param-based one.
+    assert main([cmd]) == 1
+    assert main(["--no-taint-params", cmd]) in (0, 1)

@@ -3,24 +3,26 @@ requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "hello-cli"
-version = "1.0.0"
-description = "A tiny professional 'hello world' CLI, structured as a reusable repo template."
+name = "pytaint"
+version = "0.1.0"
+description = "A taint-based static analyzer that finds SQL injection and command injection in Python source code."
 readme = "README.md"
 requires-python = ">=3.9"
 license = { text = "MIT" }
 authors = [{ name = "Carl Masters" }]
-keywords = ["cli", "template", "hello-world"]
+keywords = ["security", "static-analysis", "taint-analysis", "sql-injection", "command-injection", "ast"]
 classifiers = [
     "Programming Language :: Python :: 3",
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
+    "Topic :: Security",
+    "Topic :: Software Development :: Quality Assurance",
 ]
 
-# This line is the magic that turns `hello` into a real terminal command
+# This line is the magic that turns `pytaint` into a real terminal command
 # after install: it maps the command name -> function to call.
 [project.scripts]
-hello = "hello_cli.cli:main"
+pytaint = "pytaint.cli:main"
 
 # Extra dependencies only needed for development (tests, coverage).
 # Installed with:  pip install -e ".[dev]"
@@ -35,9 +37,9 @@ where = ["src"]
 # so you get a coverage report automatically. `--cov-report=term-missing`
 # lists the exact line numbers that no test touched.
 [tool.pytest.ini_options]
-addopts = "--cov=hello_cli --cov-report=term-missing"
+addopts = "--cov=pytaint --cov-report=term-missing"
 testpaths = ["tests"]
 
-# Coverage settings: measure the hello_cli package specifically.
+# Coverage settings: measure the pytaint package specifically.
 [tool.coverage.run]
-source = ["hello_cli"]
+source = ["pytaint"]

@@ -29,8 +29,8 @@ USER appuser
 
 # --- Run ----------------------------------------------------------------
 # ENTRYPOINT is the command that always runs; CMD supplies default
-# arguments you can override:
-#   docker run --rm hello-cli               -> hello --name World
-#   docker run --rm hello-cli --name Ada    -> hello --name Ada
-ENTRYPOINT ["hello"]
-CMD ["--name", "World"]
+# arguments you can override. Mount code to scan into the container, e.g.:
+#   docker run --rm -v "$PWD":/scan pytaint /scan
+#   docker run --rm pytaint                 -> shows --help
+ENTRYPOINT ["pytaint"]
+CMD ["--help"]
