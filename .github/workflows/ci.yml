@@ -23,11 +23,11 @@ jobs:
     steps:
       # Pull our repo's code into the fresh VM. Third-party action, version-pinned.
       - name: Check out the code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       # Install the requested Python version. Also version-pinned.
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python-version }}
 
@@ -48,7 +48,7 @@ jobs:
       # One-time setup: sign in at codecov.io with GitHub and add the repo.
       - name: Upload coverage to Codecov
         if: matrix.python-version == '3.13'
-        uses: codecov/codecov-action@v5
+        uses: codecov/codecov-action@v7
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: ./coverage.xml
