@@ -1,0 +1,55 @@
+# GitHub Actions workflow: runs the test suite automatically in the cloud.
+# The file lives at .github/workflows/ — GitHub discovers it there by convention.
+name: CI
+
+# WHEN this runs: on every push to main, and on every pull request into main.
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    # The virtual machine GitHub spins up for us, fresh each run.
+    runs-on: ubuntu-latest
+
+    # Run the whole suite against several Python versions at once, so we
+    # find out immediately if the code breaks on an older interpreter.
+    strategy:
+      matrix:
+        python-version: ["3.9", "3.11", "3.13"]
+
+    steps:
+      # Pull our repo's code into the fresh VM. Third-party action, version-pinned.
+      - name: Check out the code
+        uses: actions/checkout@v4
+
+      # Install the requested Python version. Also version-pinned.
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      # Install our package plus its dev tools (pytest, pytest-cov).
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+
+      # If any test fails, pytest exits non-zero -> this step fails ->
+      # the whole job fails -> you get a red X instead of a green check.
+      # --cov-report=xml writes coverage.xml for Codecov to read.
+      - name: Run tests
+        run: pytest --cov-report=xml
+
+      # Upload the coverage report to Codecov, which renders the % badge.
+      # Only do this once (from a single Python version) to avoid duplicates.
+      # One-time setup: sign in at codecov.io with GitHub and add the repo.
+      - name: Upload coverage to Codecov
+        if: matrix.python-version == '3.13'
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./coverage.xml
+          fail_ci_if_error: false

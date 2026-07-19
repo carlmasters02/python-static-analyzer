@@ -1,0 +1,43 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "hello-cli"
+version = "1.0.0"
+description = "A tiny professional 'hello world' CLI, structured as a reusable repo template."
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "MIT" }
+authors = [{ name = "Carl Masters" }]
+keywords = ["cli", "template", "hello-world"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+
+# This line is the magic that turns `hello` into a real terminal command
+# after install: it maps the command name -> function to call.
+[project.scripts]
+hello = "hello_cli.cli:main"
+
+# Extra dependencies only needed for development (tests, coverage).
+# Installed with:  pip install -e ".[dev]"
+[project.optional-dependencies]
+dev = ["pytest>=8.0", "pytest-cov>=5.0"]
+
+# Tell setuptools our code lives under src/ (the "src layout").
+[tool.setuptools.packages.find]
+where = ["src"]
+
+# pytest settings. `addopts` are flags applied every time you run `pytest`,
+# so you get a coverage report automatically. `--cov-report=term-missing`
+# lists the exact line numbers that no test touched.
+[tool.pytest.ini_options]
+addopts = "--cov=hello_cli --cov-report=term-missing"
+testpaths = ["tests"]
+
+# Coverage settings: measure the hello_cli package specifically.
+[tool.coverage.run]
+source = ["hello_cli"]

@@ -1,0 +1,16 @@
+# Files that should NOT be copied into the Docker image.
+# Keeps the image small and avoids leaking local junk or secrets.
+.git
+.github
+.venv
+venv
+env
+__pycache__
+*.pyc
+.pytest_cache
+.coverage
+coverage.xml
+htmlcov
+.env
+.env.*
+tests
